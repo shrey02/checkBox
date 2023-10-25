@@ -1,35 +1,157 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import obj from "./assets/data";
+import { useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function changeTreeValue(id, data, setData) {
+  let modified = data.map((element, idx) => {
+    if (element.id === id) {
+      element.value = !element.value;
+      return element;
+    } else {
+      return element;
+    }
+  });
+  if (id === "class" && data[0].value) {
+    modified = data.map((element, idx) => {
+      element.children.map((section, idx) => {
+        section.value = true;
+        section.children.map((student) => {
+          student.value = true;
+          return student;
+        });
+        return section;
+      });
+      return element;
+    });
+  } else {
+    modified = data.map((element, idx) => {
+      element.children.map((section, idx) => {
+        section.value = false;
+        section.children.map((student) => {
+          student.value = false;
+          return student;
+        });
+        return section;
+      });
+      return element;
+    });
+  }
+  setData(modified);
 }
 
-export default App
+function handleSectionChange(id, data, setData) {
+  let modified = data.map((element, idx) => {
+    element.children.map((section, idx) => {
+      if (section.id === id) {
+        section.value = !section.value;
+        section.children.map((student) => {
+          student.value = section.value;
+          return student;
+        });
+      }
+      return section;
+    });
+    return element;
+  });
+  setData(modified);
+  modified = data.map((element, idx) => {
+    let count = 0;
+    element.children.map((child) => {
+      if (child.value === true) count++;
+      return child;
+    });
+    if (count === element.children.length) element.value = true;
+    else {
+      element.value = false;
+    }
+    return element;
+  });
+  setData(modified);
+}
+
+function handleSingleStudent(id, data, setData) {
+ 
+  let modified = data.map((element, idx) => {
+    element.children.map((section, idx) => {
+      section.children.map((student) => {
+        if (student.id === id) {
+          student.value = !student.value;
+        }
+        return student;
+      });
+      return section;
+    });
+    return element;
+  });
+  setData(modified);
+  modified = data.map((element, idx) => {
+    element.children.map((section, idx) => {
+      let count = 0;
+      section.children.map((child) => {
+        if (child.value === true) count++;
+        return child;
+      });
+      if (count === section.children.length) section.value = true;
+      else {
+        section.value = false;
+      }
+      return section;
+    });
+    return element;
+  });
+  setData(modified);
+  handleSectionChange("", data, setData);
+}
+
+export default function App() {
+  const [data, setData] = useState(obj);
+  const handleCheck = (id) => {
+    console.log(id);
+    changeTreeValue(id, obj, setData);
+  };
+
+  return (
+    <div classid="App">
+      {data.map((element, idx) => (
+        <>
+          <div>
+            <div style={{ display: "flex" }}>
+              <h4>Class</h4>
+              <input
+                type="checkbox"
+                checked={element.value === true}
+                onChange={() => handleCheck(element.id)}
+              />
+            </div>
+          </div>
+          {element.children.map((section, idx) => (
+            <>
+              <div style={{ marginLeft: "2rem" }}>
+                <div style={{ display: "flex" }}>
+                  <h4>Section</h4>
+                  <input
+                    type="checkbox"
+                    checked={section.value === true}
+                    onChange={() => {
+                      handleSectionChange(section.id, data, setData);
+                    }}
+                  />
+                </div>
+              </div>
+              {section.children.map((student) => (
+                <div>
+                  <input
+                    type="checkbox"
+                    checked={student.value === true}
+                    onChange={() => {
+                      handleSingleStudent(student.id, data, setData);
+                    }}
+                  />
+                </div>
+              ))}
+            </>
+          ))}
+        </>
+      ))}
+    </div>
+  );
+}
